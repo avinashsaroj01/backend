@@ -95,7 +95,65 @@ const getPaste = async (req, res) => {
     return res.status(500).json({ error: "internal server error" });
   }
 };
+
+const getPasteHtml = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).send("Not Found");
+    }
+
+    const paste = await Paste.findById(id);
+
+    if (!paste) {
+      return res.status(404).send("Not Found");
+    }
+
+    const now = getNow(req);
+
+    /* ---------- EXPIRY CHECK ---------- */
+    if (paste.expiresAt && now >= paste.expiresAt) {
+      return res.status(404).send("Not Found");
+    }
+
+    /* ---------- VIEW LIMIT CHECK ---------- */
+    if (paste.maxViews !== null && paste.viewsUsed >= paste.maxViews) {
+      return res.status(404).send("Not Found");
+    }
+
+    /* ---------- SAFE HTML RENDER ---------- */
+    const escapedContent = paste.content
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+    return res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Paste</title>
+          <style>
+            body { font-family: monospace; padding: 20px; background: #f7f7f7; }
+            pre { background: #fff; padding: 16px; border-radius: 6px; }
+          </style>
+        </head>
+        <body>
+          <pre>${escapedContent}</pre>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   createPaste,
   getPaste,
+  getPasteHtml,
 };
