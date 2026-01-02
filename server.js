@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const connectDB = require("./config/db");
+const pasteRoutes = require("./route/pasteRoutes");
 
 dotenv.config();
 
@@ -11,6 +12,9 @@ app.use(express.json());
 const PORT = process.env.PORT || 5000;
 
 connectDB();
+
+app.use("/api", pasteRoutes);
+
 
 /* ---------- HEALTH CHECK ---------- */
 app.get("/api/healthz", (req, res) => {
