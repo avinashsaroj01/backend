@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 app.use("/api", pasteRoutes);
+app.use("/", pasteRoutes); 
 
 
 /* ---------- HEALTH CHECK ---------- */
