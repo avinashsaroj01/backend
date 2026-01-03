@@ -20,14 +20,18 @@ app.use("/", pasteRoutes);
 
 
 /* ---------- HEALTH CHECK ---------- */
-app.get("/api/healthz", (req, res) => {
-  const dbState = mongoose.connection.readyState; // 1 = connected
-  if (dbState === 1) {
+app.get("/api/healthz", async (req, res) => {
+  try {
+    await connectDB();
     return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("Health check failed:", err.message);
+    return res.status(500).json({ ok: false });
   }
-  return res.status(500).json({ ok: false });
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = app;
